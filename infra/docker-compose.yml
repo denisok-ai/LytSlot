@@ -1,0 +1,63 @@
+# LytSlot Pro - dev stack (db, redis, api, bot, worker, web)
+# Полные имена образов (docker.io/...) для Podman. depends_on не используем: у Podman при
+# повторном up граф зависимостей (--requires по ID) даёт "container X depends on Y not found".
+version: "3.9"
+services:
+  db:
+    image: docker.io/timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: lytslot
+      POSTGRES_PASSWORD: lytslot
+      POSTGRES_DB: lytslot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+    image: docker.io/library/redis:7-alpine
+    ports:
+      - "6379:6379"
+  api:
+    image: lytslot-api:latest
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    pull_policy: never
+    env_file: ../.env
+    environment:
+      DATABASE_URL_SYNC: postgresql://lytslot:lytslot@db:5432/lytslot
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+  bot:
+    image: lytslot-bot:latest
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.bot
+    pull_policy: never
+    env_file: ../.env
+    environment:
+      API_BASE_URL: http://api:8000
+  worker:
+    image: lytslot-worker:latest
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.worker
+    pull_policy: never
+    env_file: ../.env
+    environment:
+      DATABASE_URL_SYNC: postgresql://lytslot:lytslot@db:5432/lytslot
+      REDIS_URL: redis://redis:6379/0
+  web:
+    image: lytslot-web:latest
+    build:
+      context: ../services/web
+      dockerfile: Dockerfile
+    pull_policy: never
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+
+volumes:
+  pgdata: {}

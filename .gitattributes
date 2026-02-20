@@ -1,0 +1,2 @@
+# Shell scripts — всегда LF (иначе в WSL: /usr/bin/env: 'bash\r': No such file or directory)
+*.sh text eol=lf

@@ -1,0 +1,42 @@
+# LytSlot Pro - API deployment (example, adjust image and secrets)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lytslot-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lytslot-api
+  template:
+    metadata:
+      labels:
+        app: lytslot-api
+    spec:
+      containers:
+        - name: api
+          image: lytslot/api:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL_SYNC
+              valueFrom:
+                secretKeyRef:
+                  name: lytslot-secrets
+                  key: database-url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: lytslot-secrets
+                  key: redis-url
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lytslot-api
+spec:
+  selector:
+    app: lytslot-api
+  ports:
+    - port: 80
+      targetPort: 8000

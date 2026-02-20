@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["db*", "shared*", "services*"]
+
+[project]
+name = "lytslot-pro"
+version = "0.1.0"
+description = "LytSlot Pro - Multi-Channel Ad Platform (SaaS)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.109",
+    "uvicorn[standard]>=0.27",
+    "structlog>=24.1",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg",
+    "alembic",
+    "psycopg2-binary",
+    "pydantic>=2",
+    "pydantic-settings",
+    "python-jose[cryptography]",
+    "redis",
+    "celery[redis]",
+    "aiogram>=3.2",
+    "httpx",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+    "black",
+    "pre-commit",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+include = ["*.py"]
+exclude = [".venv", ".git", "db/migrations/versions"]
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "C4", "SIM"]
+# B008: "no function call in defaults" — отключаем: FastAPI использует Depends()/Query() в сигнатурах намеренно.
+ignore = ["B008"]
+# В моделях: F821 (forward refs в Mapped["Name"]); UP037 не убирать кавычки — имена в scope только при TYPE_CHECKING.
+[tool.ruff.lint.per-file-ignores]
+"db/models/*.py" = ["F821", "UP037"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+include = "\\.pyi?$"
+exclude = '''/(\\.venv|\\.git|db/migrations/versions)/'''
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

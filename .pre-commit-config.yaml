@@ -1,0 +1,34 @@
+# LytSlot Pro — pre-commit hooks
+# Установка: pip install pre-commit && pre-commit install
+# Запуск вручную: pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^(db|shared|services|tests)/.*\.py$
+
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3
+        files: ^(db|shared|services|tests)/.*\.py$
+
+  - repo: local
+    hooks:
+      - id: frontend-eslint
+        name: frontend eslint
+        entry: bash -c 'cd services/web && npm run lint'
+        language: system
+        files: ^services/web/.*\.(tsx?|jsx?|mjs)$
+
+      - id: frontend-prettier
+        name: frontend prettier
+        entry: bash -c 'cd services/web && paths=(); for f in "$@"; do paths+=("${f#services/web/}"); done; [ ${#paths[@]} -eq 0 ] || ./node_modules/.bin/prettier --write "${paths[@]}"' --
+        language: system
+        types_or: [javascript, jsx, ts, tsx, json, css, scss]
+        files: ^services/web/
+        pass_filenames: true

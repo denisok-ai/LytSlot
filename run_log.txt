@@ -1,0 +1,14 @@
+﻿python : Traceback (most recent call last):
+C:\Users\user\AppData\Local\Temp\ps-script-2268e231-7107-4895-82ae-f101a6047336.ps1:76 знак:1
++ python -c "import sys; print(sys.executable); from services.api.main  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "<string>", line 1, in <module>
+    import sys; print(sys.executable); from services.api.main import app
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "\\wsl.localhost\Ubuntu-24.04\home\denisok\projects\LytSlot\services\api\main.py", line 10, in <module>
+    from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+ModuleNotFoundError: No module named 'fastapi'
+C:\Users\user\AppData\Local\Programs\Python\Python314\python.exe

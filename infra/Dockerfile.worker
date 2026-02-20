@@ -1,0 +1,8 @@
+FROM python:3.11-slim
+WORKDIR /app
+ENV PYTHONPATH=/app
+COPY pyproject.toml ./
+RUN pip install --no-cache-dir celery redis sqlalchemy psycopg2-binary
+COPY db ./db
+COPY services/worker ./services/worker
+CMD ["celery", "-A", "services.worker.celery_app", "worker", "-l", "info", "-Q", "publish", "notifications", "celery"]
