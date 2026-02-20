@@ -29,9 +29,9 @@
   - Шаги: [x] docker-compose.yml; [x] .env.example; [x] Dockerfile'ы в infra/; [x] README
   - Зависимости: Структура проекта
 
-- **CI/CD (GitHub Actions)** | Приоритет: Высокий | Статус: Не начата
+- **CI/CD (GitHub Actions)** | Приоритет: Высокий | Статус: В процессе
   - Описание: Сборка, тесты, линтеры; деплой на staging/production (Render/AWS/DO).
-  - Шаги: [ ] Workflow для backend/bot/frontend; [ ] Деплой по ветке/тегу
+  - Шаги: [x] Workflow backend (ruff, black, pytest с PostgreSQL); [x] Workflow frontend (lint, build); [ ] Деплой по ветке/тегу (при необходимости)
   - Зависимости: Репозиторий, окружение
 
 ---

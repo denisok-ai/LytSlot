@@ -4,6 +4,19 @@
 
 ---
 
+## 2025-02-20 — CI (GitHub Actions)
+
+### Наблюдения
+- В Tasktracker задача «CI/CD (GitHub Actions)» — Высокий приоритет, не начата. Нужен базовый pipeline: линтеры и тесты без деплоя.
+
+### Решения
+- Добавлен **.github/workflows/ci.yml**: триггер на push/PR в main и develop. Jobs: (1) backend-lint — Python 3.12, pip install -e ".[dev]", ruff check и black --check; (2) backend-test — сервис postgres (timescale/timescaledb:latest-pg16), env DATABASE_URL_SYNC, JWT_SECRET, ENABLE_DEV_LOGIN=true, CELERY_BROKER_URL пустой, alembic upgrade head, pytest tests/; (3) frontend-lint — Node 20, npm ci в services/web, npm run lint; (4) frontend-build — npm run build. Деплой по ветке/тегу оставлен на потом (Render/AWS/DO при необходимости).
+
+### Проблемы
+- Нет.
+
+---
+
 ## 2025-02-20 — Ruff B008 и «системные» ошибки линтера
 
 ### Наблюдения

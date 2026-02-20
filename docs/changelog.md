@@ -22,6 +22,16 @@
 
 ---
 
+## [2025-02-20] - CI (GitHub Actions)
+
+### Добавлено
+- **.github/workflows/ci.yml** — workflow при push/PR в `main` и `develop`: job **backend-lint** (ruff, black), **backend-test** (PostgreSQL 16/TimescaleDB service, alembic upgrade head, pytest), **frontend-lint** (npm ci, npm run lint в services/web), **frontend-build** (npm run build). Переменные для тестов: DATABASE_URL_SYNC, JWT_SECRET, ENABLE_DEV_LOGIN, CELERY_BROKER_URL пустой.
+
+### Изменено
+- Tasktracker: задача «CI/CD (GitHub Actions)» переведена в статус «В процессе» (workflow добавлен, деплой по ветке/тегу — при необходимости).
+
+---
+
 ## [2025-02-20] - Линтеры и pre-commit
 
 ### Добавлено

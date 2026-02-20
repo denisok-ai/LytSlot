@@ -135,6 +135,10 @@ docker compose -f infra/docker-compose.yml up -d
 
 Пошаговые команды (клонирование, зависимости, БД, миграции, запуск API и web): **[docs/Deploy-Clean-OS.md](docs/Deploy-Clean-OS.md)**.
 
+## CI (GitHub Actions)
+
+При push или pull request в ветки `main` и `develop` запускается workflow **.github/workflows/ci.yml**: линтеры backend (ruff, black), тесты backend (PostgreSQL + TimescaleDB, миграции, pytest), линт и сборка frontend (services/web). После пуша на GitHub проверки появятся на вкладке Actions.
+
 ## Линтеры и pre-commit
 
 - **Backend:** `ruff` (линтер) и `black` (форматирование). Установка dev-зависимостей: `pip install -e ".[dev]"`. Запуск: `ruff check db shared services tests`, `black db shared services tests`.
