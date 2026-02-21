@@ -14,6 +14,24 @@
 
 ## Локальный запуск
 
+### Один скрипт (без нескольких терминалов, всё локально)
+
+Из корня проекта выполните **одну команду** — поднимутся БД и Redis (Podman/Docker), миграции и seed, API и при необходимости Worker в фоне, в текущем терминале останется только Web (логи здесь; Ctrl+C остановит только Web):
+
+```bash
+chmod +x scripts/run-local.sh scripts/run-local-stop.sh
+./scripts/run-local.sh
+```
+
+Требования: установлены Podman (или Docker), Python 3.11+ с venv, Node.js; один раз выполнены `python3 -m venv .venv && source .venv/bin/activate && pip install -e .`. Приложение работает полностью локально (localhost), без подключения к удалённому серверу.
+
+- Остановка API и Worker: `./scripts/run-local-stop.sh`
+- Остановка и контейнеров БД/Redis: `./scripts/run-local-stop.sh --all`
+
+---
+
+### Пошаговый запуск (если нужны отдельные шаги)
+
 1. Скопировать `.env.example` в `.env`, задать `BOT_TOKEN`, `JWT_SECRET`.
 2. БД и Redis.  
    **Если у вас Docker:**  
@@ -135,9 +153,15 @@ docker compose -f infra/docker-compose.yml up -d
 
 Пошаговые команды (клонирование, зависимости, БД, миграции, запуск API и web): **[docs/Deploy-Clean-OS.md](docs/Deploy-Clean-OS.md)**.
 
+**Автономный запуск на внешнем сервере (одной командой):** в [docs/Deploy-Clean-OS.md](docs/Deploy-Clean-OS.md) в начале описана схема «Автономный запуск на внешнем сервере (Docker/Podman)» — скрипт `./scripts/docker-up-full.sh` поднимает весь стек с перезапуском при падении и применением миграций.
+
+**Обновление на сервере (всё в Docker):** на сервере в корне репо: `bash scripts/deploy-update.sh --pull --no-cache` (или `make deploy-pull-update`). Подробно: [docs/Deploy-Update.md](docs/Deploy-Update.md).
+
+**Развёртывание с нуля на чистом сервере (Ubuntu 24.04):** один скрипт с вашей машины — вводите только пароль SSH и при необходимости логин/токен GitHub. [docs/Deploy-Server-From-Zero.md](docs/Deploy-Server-From-Zero.md).
+
 ## CI (GitHub Actions)
 
-При push или pull request в ветки `main` и `develop` запускается workflow **.github/workflows/ci.yml**: линтеры backend (ruff, black), тесты backend (PostgreSQL + TimescaleDB, миграции, pytest), линт и сборка frontend (services/web). После пуша на GitHub проверки появятся на вкладке Actions.
+При push или pull request в ветки `main` и `develop` запускается workflow **.github/workflows/ci.yml**: линтеры backend (ruff, black), тесты backend (PostgreSQL + TimescaleDB, миграции, pytest), линт и сборка frontend (services/web). Отдельный workflow **Docker Build** (при push в `main`, тегах `v*` или вручную) проверяет сборку всех Docker-образов. После пуша на GitHub проверки появятся на вкладке Actions.
 
 ## Линтеры и pre-commit
 
@@ -149,4 +173,5 @@ docker compose -f infra/docker-compose.yml up -d
 
 - [docs/Project.md](docs/Project.md) — цели, архитектура, этапы
 - [docs/Tasktracker.md](docs/Tasktracker.md) — задачи и приоритеты
+- [docs/Deploy-Update.md](docs/Deploy-Update.md) — обновление на сервере (Docker), команды и Makefile
 - [docs/Diary.md](docs/Diary.md) — решения и проблемы

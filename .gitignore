@@ -19,6 +19,7 @@ htmlcov/
 .idea/
 .vscode/
 *.log
+.run-local.*
 .DS_Store
 *.sqlite3
 db/migrations/versions/__pycache__/

@@ -4,6 +4,35 @@
 
 ---
 
+## Автономный запуск на внешнем сервере (Docker/Podman)
+
+Если на сервере установлены Docker (или Podman), весь стек можно поднять одной командой. Файл `.env` при отсутствии создаётся из `.env.example` (для продакшена потом отредактируйте в нём JWT_SECRET и BOT_TOKEN):
+
+```bash
+cd /path/to/LytSlot
+chmod +x scripts/docker-up-full.sh
+./scripts/docker-up-full.sh
+```
+
+Опционально: `./scripts/docker-up-full.sh --minimal` — поднимает только API, Web, БД и Redis (без бота и воркера; удобно для первого запуска или демо без Telegram-бота).
+
+Скрипт:
+- при отсутствии `.env` копирует его из `.env.example`;
+- определяет доступную команду (`docker compose` или `podman-compose`);
+- собирает образы и запускает сервисы (по умолчанию полный стек: db, redis, api, bot, worker, web);
+- ждёт готовности API (эндпоинт `/ready`);
+- выполняет миграции и seed внутри контейнера API.
+
+В `infra/docker-compose.yml` для всех сервисов задано `restart: unless-stopped` и healthchecks для `db`, `redis`, `api` — после перезагрузки сервера контейнеры поднимутся самостоятельно. **Обновление после изменений в коде** — удобнее всего скрипт (он сам выберет docker/podman, соберёт образы, перезапустит контейнеры и применит миграции):
+
+```bash
+./scripts/deploy-update.sh --pull
+```
+
+Вручную: `docker compose -f infra/docker-compose.yml build && docker compose -f infra/docker-compose.yml up -d`, затем миграции в контейнере API (см. README). Подробный список команд: [Deploy-Update.md](Deploy-Update.md).
+
+---
+
 ## 1. Установка зависимостей (один раз)
 
 ```bash

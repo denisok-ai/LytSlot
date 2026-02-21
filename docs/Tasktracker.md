@@ -176,6 +176,11 @@
   - Шаги: [x] Backend: модель ApiKey (tenant_id, key_hash, name), миграция 003, RLS; [x] Эндпоинты GET/POST/DELETE /api/api-keys; [x] UI в Настройках: список, создание (имя опционально), показ ключа один раз, отзыв
   - Зависимости: Auth, дашборд
 
+- **Адаптивная вёрстка дашборда (мобильные)** | Приоритет: Высокий | Статус: Завершена
+  - Описание: На мобильных — верхняя полоса с гамбургер-меню, выдвижной сайдбар; viewport в layout; адаптивные отступы контента.
+  - Шаги: [x] DashboardShell: мобильная шапка, drawer по кнопке; [x] viewport export в app/layout.tsx; [x] Отступы p-4 sm:p-6 md:p-8 в Shell; [x] Fallback шрифта в globals.css
+  - Зависимости: Дашборд
+
 ---
 
 ## 6. Платежи
@@ -237,6 +242,16 @@
 
 ## 9. Инфраструктура и мониторинг
 
+- **Автономные докеры (профили Compose, скрипт, авто .env)** | Приоритет: Высокий | Статус: Завершена
+  - Описание: Удобное развёртывание одной командой; профили minimal/full; скрипт создаёт .env из примера при отсутствии; infra/README.md — варианты и эффективность.
+  - Шаги: [x] Профили в docker-compose (bot, worker — profile full); [x] docker-up-full.sh --minimal|--full, автосоздание .env; [x] Документация в Deploy-Clean-OS.md и infra/README.md
+  - Зависимости: Docker-окружение
+
+- **Локальный запуск одним скриптом (run-local.sh)** | Приоритет: Высокий | Статус: Завершена
+  - Описание: Один скрипт без нескольких терминалов: БД/Redis (compose), миграции и seed, API и при необходимости Worker в фоне, Web в текущем терминале; без зависимости от удалённого сервера.
+  - Шаги: [x] run-local.sh (ожидание PostgreSQL, миграции, API/Worker в фоне, npm run dev); [x] run-local-stop.sh; [x] local-preflight.sh (CRLF, .env, venv, порт 5432); [x] README и .gitignore
+  - Зависимости: Docker-окружение
+
 - **Деплой на Render/AWS/DO (Docker/K8s)** | Приоритет: Высокий | Статус: Не начата
   - Описание: Окружения staging/production; масштабирование приложения и воркеров.
   - Зависимости: CI/CD, Docker
@@ -245,8 +260,9 @@
   - Описание: Метрики API, Celery, Redis, PostgreSQL; дашборды.
   - Зависимости: Деплой
 
-- **Sentry (ошибки)** | Приоритет: Высокий | Статус: Не начата
-  - Описание: Backend + Frontend; алерты.
+- **Sentry (ошибки)** | Приоритет: Высокий | Статус: Завершена
+  - Описание: Backend + Frontend; алерты. Опциональная инициализация по SENTRY_DSN (API) и NEXT_PUBLIC_SENTRY_DSN (Web).
+  - Шаги: [x] API: sentry_sdk при заданном SENTRY_DSN; [x] Frontend: instrumentation-client, sentry.server/edge.config, instrumentation.ts, global-error.tsx при NEXT_PUBLIC_SENTRY_DSN
   - Зависимости: Деплой
 
 - **Cloudflare (WAF, DDoS, CDN)** | Приоритет: Высокий | Статус: Не начата

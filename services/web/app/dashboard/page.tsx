@@ -7,7 +7,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Radio, TrendingUp, ShoppingBag, Calendar } from "lucide-react";
+import { Radio, TrendingUp, ShoppingBag, Calendar, Eye } from "lucide-react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
@@ -17,6 +17,14 @@ async function fetchChannels(token: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!r.ok) throw new Error("Failed to fetch channels");
+  return r.json();
+}
+
+async function fetchSummary(token: string) {
+  const r = await fetch("/api/proxy/api/analytics/summary", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!r.ok) throw new Error("Failed to fetch summary");
   return r.json();
 }
 
@@ -32,23 +40,29 @@ export default function DashboardPage() {
     enabled: !!token,
   });
 
+  const { data: summary } = useQuery({
+    queryKey: ["analytics-summary", token],
+    queryFn: () => fetchSummary(token || ""),
+    enabled: !!token,
+  });
+
   return (
     <DashboardShell>
       <div className="border-b border-slate-200/80 bg-white">
-        <div className="px-8 py-6">
+        <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
           <h1 className="font-display text-2xl font-bold text-slate-900">Обзор</h1>
           <p className="mt-1 text-slate-500">Каналы, слоты и заказы в одном месте.</p>
         </div>
       </div>
 
-      <div className="p-8">
+      <div>
         {!token && (
           <Card className="border-amber-200 bg-amber-50/50">
             <CardTitle>Требуется вход</CardTitle>
             <CardDescription>
               Войдите через Telegram, чтобы видеть каналы и управлять слотом.
             </CardDescription>
-            <ButtonLink href="/api/auth/callback" variant="primary" size="md" className="mt-4">
+            <ButtonLink href="/login" variant="primary" size="md" className="mt-4">
               Войти через Telegram
             </ButtonLink>
           </Card>
@@ -58,10 +72,14 @@ export default function DashboardPage() {
           <>
             <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { label: "Каналы", value: channels?.length ?? "—", icon: Radio },
-                { label: "Заказы сегодня", value: "—", icon: ShoppingBag },
-                { label: "Выручка (мес)", value: "—", icon: TrendingUp },
-                { label: "Слотов активно", value: "—", icon: Calendar },
+                {
+                  label: "Каналы",
+                  value: channels?.length ?? summary?.channels_count ?? "—",
+                  icon: Radio,
+                },
+                { label: "Заказы", value: summary?.orders_count ?? "—", icon: ShoppingBag },
+                { label: "Просмотров", value: summary?.views_total ?? "—", icon: Eye },
+                { label: "Выручка (₽)", value: summary?.revenue_total ?? "—", icon: TrendingUp },
               ].map(({ label, value, icon: Icon }) => (
                 <Card key={label} hover className="flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">

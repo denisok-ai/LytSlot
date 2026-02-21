@@ -5,8 +5,25 @@
 @created: 2025-02-19
 """
 
+from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
+
+
+def _find_env_file() -> str:
+    """Ищем .env в текущей директории или в корне проекта (где pyproject.toml или .env)."""
+    start = Path(__file__).resolve().parent
+    for dir_path in [start, *start.parents]:
+        env_path = dir_path / ".env"
+        if env_path.is_file():
+            return str(env_path)
+        if (dir_path / "pyproject.toml").is_file():
+            env_in_root = dir_path / ".env"
+            if env_in_root.is_file():
+                return str(env_in_root)
+            break
+    return ".env"
 
 
 class Settings(BaseSettings):
@@ -23,6 +40,7 @@ class Settings(BaseSettings):
     api_port: int = 8000
     enable_dev_login: bool = Field(default=False, validation_alias="ENABLE_DEV_LOGIN")
     admin_telegram_ids: str = Field(default="", validation_alias="ADMIN_TELEGRAM_IDS")
+    sentry_dsn: str = Field(default="", validation_alias="SENTRY_DSN")
 
     def get_admin_telegram_ids(self) -> list[int]:
         """Список telegram_id админов из ADMIN_TELEGRAM_IDS (через запятую)."""
@@ -31,7 +49,7 @@ class Settings(BaseSettings):
         return [int(x.strip()) for x in self.admin_telegram_ids.strip().split(",") if x.strip()]
 
     class Config:
-        env_file = ".env"
+        env_file = _find_env_file()
         env_file_encoding = "utf-8"
         extra = "ignore"
 

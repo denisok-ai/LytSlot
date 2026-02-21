@@ -1,10 +1,15 @@
-# LytSlot Pro - dev stack (db, redis, api, bot, worker, web)
+# LytSlot Pro - dev/prod stack (db, redis, api, bot, worker, web)
 # Полные имена образов (docker.io/...) для Podman. depends_on не используем: у Podman при
 # повторном up граф зависимостей (--requires по ID) даёт "container X depends on Y not found".
-version: "3.9"
+#
+# Режимы запуска (автономные докеры):
+#   Минимальный (только API + Web + БД + Redis):  docker compose up -d
+#   Полный (+ бот и воркер):                     docker compose --profile full up -d
+#   Скрипт по умолчанию поднимает полный стек:   ./scripts/docker-up-full.sh
 services:
   db:
     image: docker.io/timescale/timescaledb:latest-pg16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: lytslot
       POSTGRES_PASSWORD: lytslot
@@ -13,47 +18,75 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lytslot -d lytslot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   redis:
     image: docker.io/library/redis:7-alpine
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
   api:
     image: lytslot-api:latest
     build:
       context: ..
       dockerfile: infra/Dockerfile.api
     pull_policy: never
+    restart: unless-stopped
     env_file: ../.env
     environment:
       DATABASE_URL_SYNC: postgresql://lytslot:lytslot@db:5432/lytslot
       REDIS_URL: redis://redis:6379/0
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
   bot:
     image: lytslot-bot:latest
     build:
       context: ..
       dockerfile: infra/Dockerfile.bot
     pull_policy: never
+    restart: unless-stopped
     env_file: ../.env
     environment:
       API_BASE_URL: http://api:8000
+    profiles:
+      - full
   worker:
     image: lytslot-worker:latest
     build:
       context: ..
       dockerfile: infra/Dockerfile.worker
     pull_policy: never
+    restart: unless-stopped
     env_file: ../.env
     environment:
       DATABASE_URL_SYNC: postgresql://lytslot:lytslot@db:5432/lytslot
       REDIS_URL: redis://redis:6379/0
+    profiles:
+      - full
   web:
     image: lytslot-web:latest
     build:
       context: ../services/web
       dockerfile: Dockerfile
+      args:
+        API_BACKEND_URL: http://api:8000
+        CACHEBUST: ${CACHEBUST:-0}
     pull_policy: never
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:

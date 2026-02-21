@@ -152,7 +152,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="p-8">
+    <div>
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-slate-900">Календарь</h1>
         <p className="mt-1 text-slate-500">Слоты по каналам, создание слотов.</p>

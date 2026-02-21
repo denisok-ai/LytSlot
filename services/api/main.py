@@ -23,6 +23,18 @@ from services.api.routers import admin, analytics, api_keys, channels, orders, s
 configure_json_logging()
 logger = get_logger(__name__)
 
+if settings.sentry_dsn.strip():
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn.strip(),
+        integrations=[FastApiIntegration()],
+        traces_sample_rate=0.1,
+        environment="production",
+    )
+    logger.info("Sentry initialized")
+
 
 class AuthCallbackBody(BaseModel):
     init_data: str
@@ -159,8 +171,12 @@ def dev_login(body: DevLoginBody, db: Session = Depends(get_db)):
             "tenant_id": str(tenant.id),
         }
     except Exception as e:
-        logger.exception("dev_login failed")
-        raise HTTPException(status_code=500, detail=f"dev_login error: {e!s}") from e
+        logger.exception("dev_login failed: %s", e)
+        # Сообщение в ответе: по нему проще понять причину (БД, JWT и т.д.)
+        detail = str(e).strip() or repr(e)
+        if len(detail) > 200:
+            detail = detail[:200] + "..."
+        raise HTTPException(status_code=500, detail=detail) from e
 
 
 @app.websocket("/ws/dashboard/{tenant_id}")

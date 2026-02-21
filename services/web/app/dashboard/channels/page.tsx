@@ -169,7 +169,7 @@ export default function ChannelsPage() {
   };
 
   return (
-    <div className="p-8">
+    <div>
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-slate-900">Каналы</h1>
         <p className="mt-1 text-slate-500">Добавляйте каналы и настраивайте слоты и цены.</p>

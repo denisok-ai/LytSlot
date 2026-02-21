@@ -109,7 +109,7 @@ export default function AnalyticsPage() {
   });
 
   return (
-    <div className="p-8">
+    <div>
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-slate-900">Аналитика</h1>
         <p className="mt-1 text-slate-500">Просмотры, заказы и выручка по каналам и периодам.</p>

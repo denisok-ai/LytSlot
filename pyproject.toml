@@ -27,6 +27,7 @@ dependencies = [
     "celery[redis]",
     "aiogram>=3.2",
     "httpx",
+    "sentry-sdk[fastapi]>=1.39",
 ]
 
 [project.optional-dependencies]

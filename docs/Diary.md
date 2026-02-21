@@ -4,6 +4,90 @@
 
 ---
 
+## 2025-02-20 — Sentry на фронте (Next.js)
+
+### Наблюдения
+- Задача «Sentry (ошибки)» в трекере: Backend готов, Frontend — «при необходимости».
+
+### Решения
+- Добавлена опциональная инициализация Sentry в Next.js: только при заданном `NEXT_PUBLIC_SENTRY_DSN`. Файлы: `instrumentation-client.ts` (клиент), `sentry.server.config.ts`, `sentry.edge.config.ts`, `instrumentation.ts` (register + onRequestError), `app/global-error.tsx` (перехват ошибок рендера). Зависимость `@sentry/nextjs` в package.json. В .env.example — комментарий про NEXT_PUBLIC_SENTRY_DSN для services/web/.env.local. Задача в Tasktracker переведена в «Завершена».
+
+### Проблемы
+- Нет. withSentryConfig в next.config не добавлялся — не требуем org/project/authToken при отсутствии DSN.
+
+---
+
+## 2025-02-20 — Локальный запуск одним скриптом и адаптив (мобильные)
+
+### Наблюдения
+- Запрос: запуск без нескольких терминалов, автономно, без зависимости от сервера; затем — адаптивная линия для мобильных; шрифты «слетели».
+- Preflight выявил CRLF в run-worker.sh и недоступность PostgreSQL до поднятия контейнеров; пользователь на Podman.
+
+### Решения
+- **run-local.sh:** один скрипт — compose up db redis, ожидание порта 5432 (Python socket), миграции и seed, API в фоне (nohup, PID в .run-local.api.pid), ожидание /health, при наличии CELERY_BROKER_URL/REDIS_URL — Worker в фоне, npm run dev в текущем терминале. Определение Podman vs Docker по команде.
+- **run-local-stop.sh:** остановка по PID; флаг --all — остановка контейнеров db/redis.
+- **local-preflight.sh:** проверка .env, CRLF в скриптах, venv, порт 5432; в подсказке при недоступной БД первым указан Podman (./scripts/podman-up-db-redis.sh).
+- **Адаптив:** DashboardShell — на md+ постоянный сайдбар; на мобильных — фиксированная верхняя полоса (гамбургер + логотип), выдвижное меню (drawer) по кнопке, затемнение фона, закрытие по ссылке или клику. Viewport export в app/layout.tsx; отступы контента p-4 sm:p-6 md:p-8 в Shell; дублирующий p-8 у страниц дашборда убран.
+- **Шрифты:** переменная fontDisplay.variable добавлена на body; в globals.css задан fallback --font-display (system-ui, …).
+
+### Проблемы
+- Нет.
+
+---
+
+## 2025-02-20 — Аудит UX/UI и связей с БД
+
+### Наблюдения
+- Запрос: проверить макеты страниц, дизайн UX/UI, отображение полей и связи с БД.
+- Обзор: карточки «Заказы сегодня», «Выручка (мес)», «Слотов активно» были плейсхолдерами "—"; кнопка входа вела на POST-эндпоинт `/api/auth/callback`, а не на страницу входа.
+- Заказы: статусы выводились системными значениями (draft, paid, …).
+
+### Решения
+- Проведён аудит: перечень страниц, сравнение полей API/БД с фронтом (каналы, слоты, заказы, аналитика, API-ключи). Результат — **docs/UX-UI-Audit.md**.
+- Обзор: добавлен запрос к `/api/analytics/summary`; в карточках выводятся channels_count, orders_count, views_total, revenue_total; иконки приведены в соответствие (Eye — просмотры, TrendingUp — выручка); кнопка входа исправлена на `/login`.
+- Заказы: константа ORDER_STATUSES заменена на массив { value, label }; в селекте отображаются русские подписи статусов.
+
+### Проблемы
+- Нет. Рекомендации на будущее (колонки канал/слот в заказах, даты в каналах) зафиксированы в UX-UI-Audit.md.
+
+---
+
+## 2025-02-20 — Автономная разработка: докеры, Sentry
+
+### Наблюдения
+- Запрос: продолжить разработку в режиме отладки 10 минут в автономном режиме.
+- В Tasktracker не была отражена завершённая работа по автономным докерам (профили, скрипт, авто .env); задача Sentry — «Не начата».
+
+### Решения
+- **Tasktracker:** добавлена завершённая задача «Автономные докеры (профили Compose, скрипт, авто .env)» в раздел 9; задача «Sentry (ошибки)» переведена в «В процессе» с шагом «API: sentry_sdk при заданном SENTRY_DSN».
+- **Sentry в API:** в config добавлено поле sentry_dsn (SENTRY_DSN); в main.py при непустом SENTRY_DSN выполняется sentry_sdk.init с FastApiIntegration, traces_sample_rate=0.1; зависимость sentry-sdk[fastapi] в pyproject.toml и в infra/Dockerfile.api; в .env.example — комментарий про SENTRY_DSN.
+- **changelog:** запись «Автономные докеры и Sentry (Backend)» с перечислением добавленного и изменённого.
+
+### Проблемы
+- Нет. Тест test_ready_returns_ready_when_db_ok падает без поднятой PostgreSQL (ожидаемо в среде без БД).
+
+---
+
+## 2025-02-20 — Аудит кода и автономный запуск на внешнем сервере
+
+### Наблюдения
+- Запрос: аудит кода и оптимизация; обеспечить автономный запуск на внешнем сервере.
+- В Dockerfile.api не была указана зависимость structlog (используется в services.api.logging_config).
+- В Dockerfile.worker в CMD были очереди publish, notifications, celery — в celery_app заданы default, publish, notifications, analytics; очередь «celery» не определена, «default» и «analytics» не слушались.
+- В docker-compose не было restart и healthchecks — после перезагрузки сервера контейнеры не поднимались автоматически; оркестратор не мог проверять готовность сервисов.
+- Next.js rewrites были зашиты на localhost:8000 — при запуске web в контейнере прокси к API не работал (нужен хост api:8000).
+
+### Решения
+- **API-образ:** добавлен structlog в RUN pip install в Dockerfile.api.
+- **Worker:** CMD исправлен на очереди default, publish, notifications, analytics.
+- **Web в Docker:** в next.config.js введена переменная API_BACKEND_URL (по умолчанию localhost:8000); в Dockerfile web — ARG API_BACKEND_URL=http://api:8000; в docker-compose для web задан build arg. Сборка Next в контейнере подставляет правильный backend для rewrites.
+- **Автономный запуск:** во все сервисы в docker-compose добавлено restart: unless-stopped; для db, redis, api — healthchecks (api через Python urllib, без установки curl). Добавлен скрипт scripts/docker-up-full.sh (определение docker/podman-compose, build, up -d, ожидание /ready, exec миграций и seed). В Deploy-Clean-OS.md добавлен раздел «Автономный запуск на внешнем сервере»; в README — ссылка на него.
+
+### Проблемы
+- Нет.
+
+---
+
 ## 2025-02-20 — CI (GitHub Actions)
 
 ### Наблюдения

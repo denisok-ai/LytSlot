@@ -4,6 +4,90 @@
 
 ---
 
+## [2025-02-20] - Next.js 15 и React 19 (безопасность)
+
+### Изменено
+- **services/web:** Next.js 14.2.0 → 15.5.10, React 18 → 19, eslint-config-next 15.5.10, @types/react и @types/react-dom ^19. Цель — закрыть уязвимости GHSA-9g9p-9gw9-jx7f и GHSA-h25m-26qc-wcjf.
+- **app/layout.tsx:** комментарий «Next.js 14» → «Next.js 15».
+- **docs/Next-Security-Upgrade.md:** отражено обновление до 15.5.10.
+
+### Совместимость
+- В проекте не используются серверные `params`/`searchParams`/`cookies()`/`headers()` из Next.js — правок под async API не потребовалось. next.config без устаревших experimental-опций.
+
+---
+
+## [2025-02-20] - Sentry на фронте (Next.js)
+
+### Добавлено
+- **Sentry (Frontend):** опциональная инициализация при заданном `NEXT_PUBLIC_SENTRY_DSN`: `instrumentation-client.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, `instrumentation.ts`, `app/global-error.tsx`; зависимость `@sentry/nextjs` в services/web.
+
+### Изменено
+- **Tasktracker:** задача «Sentry (ошибки)» переведена в «Завершена» (Backend + Frontend).
+
+---
+
+## [2025-02-20] - Локальный запуск одним скриптом и адаптив (мобильные)
+
+### Добавлено
+- **scripts/run-local.sh** — один скрипт: БД/Redis (compose), ожидание PostgreSQL, миграции и seed, API и при необходимости Worker в фоне, Web в текущем терминале; без нескольких терминалов и без зависимости от удалённого сервера.
+- **scripts/run-local-stop.sh** — остановка API и Worker (опционально контейнеров: `--all`).
+- **scripts/local-preflight.sh** — проверки перед запуском (.env, CRLF, venv, порт 5432); подсказки для Podman.
+- **Адаптив дашборда:** мобильная верхняя полоса (гамбургер + логотип), выдвижное меню (drawer), на md+ — постоянный сайдбар; viewport export в layout; адаптивные отступы контента (p-4 sm:p-6 md:p-8).
+- **Шрифты:** переменная на body, fallback `--font-display` в globals.css.
+
+### Изменено
+- **README.md** — раздел «Один скрипт» с командами run-local.sh и run-local-stop.sh.
+- **.gitignore** — исключение `.run-local.*`.
+- Страницы дашборда — убран дублирующий p-8 (отступы задаёт Shell).
+
+---
+
+## [2025-02-20] - Аудит UX/UI и доработки дашборда
+
+### Добавлено
+- **docs/UX-UI-Audit.md** — аудит макетов страниц, полей и связей с API/БД; таблицы соответствия; рекомендации по UX/UI.
+
+### Изменено
+- **Обзор (dashboard):** метрики подключены к `GET /api/analytics/summary` (каналы, заказы, просмотры, выручка); кнопка «Войти через Telegram» ведёт на `/login` вместо `/api/auth/callback`.
+- **Заказы:** статусы в селекте отображаются по-русски (Черновик, Оплачен, С маркировкой, Запланирован, Опубликован, Отменён).
+
+---
+
+## [2025-02-20] - Автономные докеры и Sentry (Backend)
+
+### Добавлено
+- **Профили Docker Compose:** сервисы bot и worker в профиле `full`; минимальный запуск (`docker compose up -d`) — только db, redis, api, web; полный — `--profile full` или скрипт.
+- **scripts/docker-up-full.sh:** при отсутствии `.env` создаётся из `.env.example`; флаги `--minimal` и `--full` (по умолчанию полный стек).
+- **infra/README.md** — раздел «Автономные докеры: варианты и эффективность», когда что использовать, плюсы/ограничения.
+- **Sentry в API:** опциональная инициализация при заданном `SENTRY_DSN` (FastAPI integration, traces_sample_rate=0.1); зависимость `sentry-sdk[fastapi]` в pyproject.toml и Dockerfile.api; в .env.example — комментарий про SENTRY_DSN.
+
+### Изменено
+- **docs/Tasktracker.md** — задача «Автономные докеры» (профили, скрипт, авто .env) — Завершена; «Sentry (ошибки)» — В процессе (backend готов).
+- **docs/Deploy-Clean-OS.md** — уточнено: .env создаётся скриптом при отсутствии; добавлен вариант `--minimal`.
+
+---
+
+## [2025-02-20] - Аудит кода и автономный запуск на сервере
+
+### Добавлено
+- **scripts/docker-up-full.sh** — один скрипт для поднятия всего стека на сервере (Docker или Podman): сборка, up -d, ожидание /ready, миграции и seed в контейнере API.
+- В **docs/Deploy-Clean-OS.md** — раздел «Автономный запуск на внешнем сервере (Docker/Podman)» с инструкцией по однокомандному деплою.
+- В **infra/docker-compose.yml** — `restart: unless-stopped` для всех сервисов; healthchecks для db, redis, api (без добавления curl в образ API — проверка через Python).
+- В **.env.example** — комментарий про RATE_LIMIT_PER_MINUTE.
+
+### Изменено
+- **infra/Dockerfile.api** — в список pip-зависимостей добавлен structlog (используется в logging_config).
+- **infra/Dockerfile.worker** — очереди Celery в CMD исправлены на default, publish, notifications, analytics (вместо publish, notifications, celery).
+- **services/web/next.config.js** — rewrites используют API_BACKEND_URL (по умолчанию localhost:8000; в Docker при сборке передаётся http://api:8000).
+- **services/web/Dockerfile** — ARG API_BACKEND_URL=http://api:8000 для корректного прокси к API из контейнера web.
+- **infra/docker-compose.yml** — для web добавлен build arg API_BACKEND_URL: http://api:8000.
+- **README.md** — ссылка на раздел про автономный запуск в Deploy-Clean-OS.md.
+
+### Исправлено
+- Worker в Docker слушал очередь «celery» вместо «default» и не слушал «analytics» — задачи могли не обрабатываться.
+
+---
+
 ## Формат записей
 
 Каждая запись оформляется по шаблону:

@@ -128,7 +128,16 @@ export function LoginForm({ botUsername, appUrl }: Props) {
                 });
                 if (!r.ok) {
                   const err = await r.json().catch(() => ({}));
-                  throw new Error(err.detail || `Ошибка ${r.status}`);
+                  const msg =
+                    typeof err.detail === "string"
+                      ? err.detail
+                      : Array.isArray(err.detail)
+                        ? err.detail
+                            .map((x: { msg?: string }) => x?.msg)
+                            .filter(Boolean)
+                            .join("; ")
+                        : null;
+                  throw new Error(msg || err.message || `Ошибка ${r.status}`);
                 }
                 const data = await r.json();
                 if (data.access_token) {

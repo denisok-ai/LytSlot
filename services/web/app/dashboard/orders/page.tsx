@@ -10,7 +10,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ShoppingBag } from "lucide-react";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 
-const ORDER_STATUSES = ["draft", "paid", "marked", "scheduled", "published", "cancelled"] as const;
+const ORDER_STATUSES = [
+  { value: "draft", label: "Черновик" },
+  { value: "paid", label: "Оплачен" },
+  { value: "marked", label: "С маркировкой" },
+  { value: "scheduled", label: "Запланирован" },
+  { value: "published", label: "Опубликован" },
+  { value: "cancelled", label: "Отменён" },
+] as const;
 
 type Order = {
   id: string;
@@ -91,7 +98,7 @@ export default function OrdersPage() {
   });
 
   return (
-    <div className="p-8">
+    <div>
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-slate-900">Заказы</h1>
         <p className="mt-1 text-slate-500">Список заказов на рекламу по вашим каналам.</p>
@@ -144,8 +151,8 @@ export default function OrdersPage() {
                         className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                       >
                         {ORDER_STATUSES.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
+                          <option key={s.value} value={s.value}>
+                            {s.label}
                           </option>
                         ))}
                       </select>

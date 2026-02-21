@@ -6,7 +6,7 @@
  */
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
@@ -21,7 +21,7 @@ function buildInitData(searchParams: URLSearchParams): string {
   return params.sort().join("&");
 }
 
-export default function LoginCallbackPage() {
+function LoginCallbackContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [message, setMessage] = useState("");
@@ -85,5 +85,21 @@ export default function LoginCallbackPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
+          <div className="rounded-2xl border border-slate-200/80 bg-white px-8 py-6 shadow-card">
+            <p className="text-slate-600">Вход в кабинет...</p>
+          </div>
+        </div>
+      }
+    >
+      <LoginCallbackContent />
+    </Suspense>
   );
 }
